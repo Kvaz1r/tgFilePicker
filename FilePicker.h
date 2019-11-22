@@ -73,8 +73,7 @@ public:
                 ptr->add(listView);
 
                 auto select = tgui::Button::create("Select");
-
-                select->setPosition({ 
+                select->setPosition({
                     tgui::bindLeft(listView) + listView->getSize().x / 2 - select->getSize().x / 2,
                     tgui::bindBottom(listView) + ptr->getSize().y * 0.05 });
 
@@ -86,6 +85,14 @@ public:
                     });
 
                 ptr->add(select);
+
+                ptr->connect("SizeChanged", [ptr, listView, select] {
+                    listView->setSize(ptr->getSize().x, ptr->getSize().y * 0.8);
+                    select->setPosition({
+                        tgui::bindLeft(listView) + listView->getSize().x / 2 - select->getSize().x / 2,
+                        tgui::bindBottom(listView) + ptr->getSize().y * 0.05 });
+                    });
+
                 add(ptr);
             });
 
@@ -120,4 +127,3 @@ private:
     tgui::String m_dir = std::filesystem::current_path();
     tgui::String m_curPath = m_dir;
 };
-
