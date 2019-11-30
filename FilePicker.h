@@ -3,6 +3,8 @@
 
 #include <filesystem>
 
+#include <windows.h>
+
 class View : public tgui::ListView
 {
 public:
@@ -23,11 +25,29 @@ public:
     {
         removeAllItems();
         auto i = 0;
+
         addItem({ std::to_string(++i), ".." });
 
         for (const auto& entry : std::filesystem::directory_iterator(val.asWideString()))
         {
             addItem({ std::to_string(++i), entry.path().c_str() });
+        }
+    }
+
+    void load()
+    {
+        removeAllItems();
+        wchar_t LogicalDrives[MAX_PATH] = { 0 };
+
+        if (::GetLogicalDriveStringsW(MAX_PATH, LogicalDrives))
+        {
+            wchar_t* drive = LogicalDrives;
+            auto i = 0;
+            while (*drive)
+            {
+                addItem({ std::to_string(++i), drive });
+                drive += wcslen(drive) + 1;
+            }
         }
     }
 };
@@ -57,7 +77,16 @@ public:
                         {
                             if (s == L"..")
                             {
-                                s = std::filesystem::path(m_curPath).parent_path().wstring();
+                                auto path = std::filesystem::path(m_curPath);
+
+                                if (path == path.root_path())
+                                {
+                                    m_curPath.clear();
+                                    listView->load();
+                                    return;
+                                }
+
+                                s = path.parent_path().wstring();
                             }
                             listView->load(s);
                             m_curPath = s;
