@@ -46,12 +46,12 @@ public:
                 std::stringstream sbuf;
                 sbuf << std::put_time(localtime(&t), "%F %H:%M:%S");
 
-                addItem({ std::to_string(++i), entry.path().c_str(),
+                addItem({ std::to_string(++i), entry.path().filename().c_str(),
                     std::to_string(entry.file_size()), sbuf.str() });
             }
             else
             {
-                addItem({ std::to_string(++i), entry.path().c_str() });
+                addItem({ std::to_string(++i), entry.path().filename().c_str() });
             }           
         }
     }
@@ -86,7 +86,7 @@ public:
         setTitleAlignment(tgui::ChildWindow::TitleAlignment::Center);
         setResizable();
 
-        auto listView = View::create();       
+        auto listView = View::create();
 
         listView->connect("DoubleClicked", [this, listView](int id)
             {
