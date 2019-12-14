@@ -6,10 +6,11 @@
 #include <TGUI/TGUI.hpp>
 
 #include <filesystem>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
 
 #include <windows.h>
-
-#include <iostream>
 
 class View : public tgui::ListView
 {
@@ -18,7 +19,7 @@ public:
 
     View() : tgui::ListView()
     {
-        setTextSize(20);
+        setTextSize(15);
         setExpandLastColumn(true);
     }
 
@@ -36,7 +37,22 @@ public:
 
         for (const auto& entry : std::filesystem::directory_iterator(val.asWideString()))
         {
-            addItem({ std::to_string(++i), entry.path().c_str() });
+            if (std::filesystem::is_regular_file(entry))
+            {
+                auto ft = entry.last_write_time();
+                auto t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()
+                    + (ft - std::filesystem::file_time_type::clock::now()));
+
+                std::stringstream sbuf;
+                sbuf << std::put_time(localtime(&t), "%F %H:%M:%S");
+
+                addItem({ std::to_string(++i), entry.path().c_str(),
+                    std::to_string(entry.file_size()), sbuf.str() });
+            }
+            else
+            {
+                addItem({ std::to_string(++i), entry.path().c_str() });
+            }           
         }
     }
 
@@ -70,7 +86,7 @@ public:
         setTitleAlignment(tgui::ChildWindow::TitleAlignment::Center);
         setResizable();
 
-        auto listView = View::create();
+        auto listView = View::create();       
 
         listView->connect("DoubleClicked", [this, listView](int id)
             {
@@ -95,10 +111,17 @@ public:
                 }
             });
 
-        listView->setSize(getSize().x, getSize().y * 0.8);
+        listView->setSize(getSize().x, getSize().y * 0.8f);
 
-        listView->addColumn(L"   ID   ");
-        listView->addColumn(L"   File   ");
+        listView->addColumn(L"ID");       
+        listView->addColumn(L"File");
+        listView->addColumn(L"Size");
+        listView->addColumn(L"Modified");
+        listView->setColumnWidth(0, getSize().x * 0.08f);
+        listView->setColumnWidth(1, getSize().x * 0.5f);
+        listView->setColumnWidth(2, getSize().x * 0.12f);
+        listView->setColumnWidth(3, getSize().x * 0.3f);
+
         listView->load(m_dir);
 
         add(listView);
@@ -119,7 +142,11 @@ public:
 
         connect("SizeChanged", [this, listView, select] 
             {
-            listView->setSize(getSize().x, getSize().y * 0.8);
+            listView->setSize(getSize().x, getSize().y * 0.8f);
+            listView->setColumnWidth(0, getSize().x * 0.08f);
+            listView->setColumnWidth(1, getSize().x * 0.5f);
+            listView->setColumnWidth(2, getSize().x * 0.12f);
+            listView->setColumnWidth(3, getSize().x * 0.3f);
             select->setPosition({
                 tgui::bindLeft(listView) + listView->getSize().x / 2 - select->getSize().x / 2,
                 tgui::bindBottom(listView) + getSize().y * 0.05 });
@@ -137,4 +164,3 @@ private:
     tgui::String m_dir = std::filesystem::current_path();
     tgui::String m_curPath = m_dir;
 };
-
