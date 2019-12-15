@@ -153,9 +153,12 @@ public:
             });
     }
 
-    static Ptr create(const sf::String& title = "", unsigned int tButtons = tgui::ChildWindow::TitleButton::Close)
+    static Ptr create(tgui::Container& c, const sf::String& title = "",
+        unsigned int tButtons = tgui::ChildWindow::TitleButton::Close)
     {
-        return std::make_shared<OpenFileDialog>(title, tButtons);
+        auto t = std::make_shared<OpenFileDialog>(title, tButtons);
+        c.add(t);
+        return t;
     }
 
     tgui::String getPath() const { return m_curPath; }

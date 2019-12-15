@@ -16,13 +16,12 @@ public:
         m_Browse->setText("Browse");
         m_Browse->connect("pressed", [this]()
             {
-                auto ptr = OpenFileDialog::create(L"File ");
+                auto ptr = OpenFileDialog::create(*this, L"File ");
                 ptr->connect("Closed", [this, ptr]()
                     {
                         m_Path->setText(ptr->getPath().asWideString());
                         ptr->destroy();
                     });
-                add(ptr);
             });
 
         m_Path = tgui::EditBox::create();
