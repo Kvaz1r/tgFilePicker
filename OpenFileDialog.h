@@ -9,6 +9,7 @@
 #include <chrono>
 #include <iomanip>
 #include <sstream>
+#include <array>
 
 #include <windows.h>
 
@@ -47,7 +48,7 @@ public:
                 sbuf << std::put_time(localtime(&t), "%F %H:%M:%S");
 
                 addItem({ std::to_string(++i), entry.path().filename().c_str(),
-                    std::to_string(entry.file_size()), sbuf.str() });
+                    get_size(entry.file_size()), sbuf.str() });
             }
             else
             {
@@ -71,6 +72,23 @@ public:
                 drive += wcslen(drive) + 1;
             }
         }
+    }
+
+private:
+    static std::string get_size(uintmax_t s)
+    {
+        std::array<std::string, 5> sizes = { "B", "KB", "MB", "GB", "TB" };
+        double len = s;
+        short order = 0;
+        while (len >= 1024 && order < sizes.size() - 1) 
+        {
+            order++;
+            len = len / 1024;
+        }
+
+        std::stringstream buf;
+        buf << std::setprecision(3) << len << sizes[order];
+        return buf.str();
     }
 };
 
