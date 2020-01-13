@@ -19,7 +19,10 @@ public:
                 auto ptr = OpenFileDialog::create(*this, L"File ");
                 ptr->connect("Closed", [this, ptr]()
                     {
-                        m_Path->setText(ptr->getPath().asWideString());
+                        if (ptr->getStatus() == OpenFileDialog::Status::OK)
+                        {
+                            m_Path->setText(ptr->getPath().asWideString());
+                        }               
                         ptr->destroy();
                     });
             });

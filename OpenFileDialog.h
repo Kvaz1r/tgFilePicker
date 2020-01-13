@@ -96,6 +96,7 @@ class OpenFileDialog : public tgui::ChildWindow
 {
 public:
     typedef std::shared_ptr<OpenFileDialog> Ptr;
+    enum class Status { OK, Cancel };
 
     OpenFileDialog(const sf::String& title = "",
         unsigned int tButtons = tgui::ChildWindow::TitleButton::Close) : ChildWindow(title, tButtons)
@@ -153,6 +154,7 @@ public:
         select->connect("pressed", [this, listView]()
             {
                 m_curPath = listView->getItemCell(listView->getSelectedItemIndex(), 1).toWideString();
+                m_status = Status::OK;
                 close();
             });
 
@@ -181,7 +183,10 @@ public:
 
     tgui::String getPath() const { return m_curPath; }
 
+    Status getStatus() const { return m_status; }
+
 private:
     tgui::String m_dir = std::filesystem::current_path();
     tgui::String m_curPath = m_dir;
+    Status m_status = Status::Cancel;
 };
