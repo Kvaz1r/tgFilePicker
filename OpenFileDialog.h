@@ -98,8 +98,10 @@ public:
     typedef std::shared_ptr<OpenFileDialog> Ptr;
     enum class Status { OK, Cancel };
 
-    OpenFileDialog(const sf::String& title = "",
-        unsigned int tButtons = tgui::ChildWindow::TitleButton::Close) : ChildWindow(title, tButtons)
+    OpenFileDialog(const sf::String& title = "", 
+        tgui::String dir = std::filesystem::current_path().generic_wstring(),
+        unsigned int tButtons = tgui::ChildWindow::TitleButton::Close) : ChildWindow(title, tButtons), 
+        m_dir(dir), m_curPath(dir)
     {
         setPosition(100, 100);
         setTitleAlignment(tgui::ChildWindow::TitleAlignment::Center);
@@ -174,9 +176,10 @@ public:
     }
 
     static Ptr create(tgui::Container& c, const sf::String& title = "",
+        tgui::String dir = std::filesystem::current_path().generic_wstring(),
         unsigned int tButtons = tgui::ChildWindow::TitleButton::Close)
     {
-        auto t = std::make_shared<OpenFileDialog>(title, tButtons);
+        auto t = std::make_shared<OpenFileDialog>(title, dir, tButtons);
         c.add(t);
         return t;
     }
@@ -186,7 +189,7 @@ public:
     Status getStatus() const { return m_status; }
 
 private:
-    tgui::String m_dir = std::filesystem::current_path();
-    tgui::String m_curPath = m_dir;
+    tgui::String m_dir;
+    tgui::String m_curPath;
     Status m_status = Status::Cancel;
 };

@@ -22,6 +22,7 @@ MyFrame::MyFrame()
     
     auto picker = FilePicker::create();
     picker->getButton()->setText(L"Browse");
+    picker->setDir("E:/");
 
     panel->add(picker);
     gui.add(panel);

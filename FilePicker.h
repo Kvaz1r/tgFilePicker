@@ -16,7 +16,7 @@ public:
         m_Browse->setText("Browse");
         m_Browse->connect("pressed", [this]()
             {
-                auto ptr = OpenFileDialog::create(*this, L"File ");
+                auto ptr = OpenFileDialog::create(*this, L"File ", m_dir);
                 ptr->connect("Closed", [this, ptr]()
                     {
                         if (ptr->getStatus() == OpenFileDialog::Status::OK)
@@ -48,7 +48,7 @@ public:
 
     tgui::String getDir() const { return m_dir; }
 
-    tgui::String setDir(const tgui::String& dir) { m_dir = dir; }
+    void setDir(const tgui::String& dir) { m_dir = dir; }
 
 protected:
     tgui::Button::Ptr m_Browse;
