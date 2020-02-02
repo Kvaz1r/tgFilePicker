@@ -111,10 +111,11 @@ public:
 
         listView->connect("DoubleClicked", [this, listView](int id)
             {
-                auto s = listView->getItemCell(id, 1).toWideString();
+                auto fname = listView->getItemCell(id, 1).toWideString();
+                auto s = std::filesystem::path(m_curPath) / fname;
                 if (std::filesystem::is_directory(s))
                 {
-                    if (s == L"..")
+                    if (fname == L"..")
                     {
                         auto path = std::filesystem::path(m_curPath);
 
@@ -127,8 +128,8 @@ public:
 
                         s = path.parent_path().wstring();
                     }
-                    listView->load(s);
-                    m_curPath = s;
+                    m_curPath = s.wstring();
+                    listView->load(m_curPath);
                 }
             });
 
@@ -155,7 +156,8 @@ public:
         select->setTextSize(20);
         select->connect("pressed", [this, listView]()
             {
-                m_curPath = listView->getItemCell(listView->getSelectedItemIndex(), 1).toWideString();
+                auto fname = listView->getItemCell(listView->getSelectedItemIndex(), 1).toWideString();
+                m_curPath = (std::filesystem::path(m_curPath) / fname).wstring();
                 m_status = Status::OK;
                 close();
             });
