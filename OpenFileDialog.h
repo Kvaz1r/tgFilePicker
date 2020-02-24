@@ -53,7 +53,7 @@ public:
             else
             {
                 addItem({ std::to_string(++i), entry.path().filename().c_str() });
-            }           
+            }
         }
     }
 
@@ -80,7 +80,7 @@ private:
         std::array<std::string, 5> sizes = { "B", "KB", "MB", "GB", "TB" };
         double len = s;
         short order = 0;
-        while (len >= 1024 && order < sizes.size() - 1) 
+        while (len >= 1024 && order < sizes.size() - 1)
         {
             order++;
             len = len / 1024;
@@ -98,18 +98,25 @@ public:
     typedef std::shared_ptr<OpenFileDialog> Ptr;
     enum class Status { OK, Cancel };
 
-    OpenFileDialog(const sf::String& title = "", 
+    OpenFileDialog(const sf::String& title = "",
         tgui::String dir = std::filesystem::current_path().generic_wstring(),
-        unsigned int tButtons = tgui::ChildWindow::TitleButton::Close) : ChildWindow(title, tButtons), 
+        unsigned int tButtons = tgui::ChildWindow::TitleButton::Close) : ChildWindow(title, tButtons),
         m_dir(dir), m_curPath(dir)
     {
-        setPosition(100, 100);
         setTitleAlignment(tgui::ChildWindow::TitleAlignment::Center);
         setResizable();
 
-        auto listView = View::create();
+        auto label = tgui::Label::create();
+        label->setVerticalAlignment(tgui::Label::VerticalAlignment::Center);
+        label->setText(dir.asWideString());
+        label->setTextSize(14);
+        label->setSize(getSize().x, 20);
+        add(label);
 
-        listView->connect("DoubleClicked", [this, listView](int id)
+        auto listView = View::create();
+        listView->setPosition({ tgui::bindLeft(label), tgui::bindBottom(label) + 10 });
+
+        listView->connect("DoubleClicked", [this, listView, label](int id)
             {
                 auto fname = listView->getItemCell(id, 1).toWideString();
                 auto s = std::filesystem::path(m_curPath) / fname;
@@ -123,19 +130,19 @@ public:
                         {
                             m_curPath.clear();
                             listView->load();
+                            label->setText("");
                             return;
                         }
 
                         s = path.parent_path().wstring();
                     }
                     m_curPath = s.wstring();
+                    label->setText(s.c_str());
                     listView->load(m_curPath);
                 }
             });
 
-        listView->setSize(getSize().x, getSize().y * 0.8f);
-
-        listView->addColumn(L"ID");       
+        listView->addColumn(L"ID");
         listView->addColumn(L"File");
         listView->addColumn(L"Size");
         listView->addColumn(L"Modified");
@@ -149,10 +156,7 @@ public:
         add(listView);
 
         auto select = tgui::Button::create("Select");
-        select->setPosition({
-            tgui::bindLeft(listView) + listView->getSize().x / 2 - select->getSize().x / 2,
-            tgui::bindBottom(listView) + getSize().y * 0.05 });
-
+        select->setSize(100, 40);
         select->setTextSize(20);
         select->connect("pressed", [this, listView]()
             {
@@ -164,16 +168,20 @@ public:
 
         add(select);
 
-        connect("SizeChanged", [this, listView, select] 
+        listView->setSize(getSize().x, getSize().y - label->getSize().y - select->getSize().y - 20);
+        select->setPosition({ tgui::bindLeft(listView) + listView->getSize().x / 2 - select->getSize().x / 2,
+            tgui::bindBottom(listView) + 10 });
+
+        connect("SizeChanged", [this, listView, select, label]
             {
-            listView->setSize(getSize().x, getSize().y * 0.8f);
-            listView->setColumnWidth(0, getSize().x * 0.08f);
-            listView->setColumnWidth(1, getSize().x * 0.5f);
-            listView->setColumnWidth(2, getSize().x * 0.12f);
-            listView->setColumnWidth(3, getSize().x * 0.3f);
-            select->setPosition({
-                tgui::bindLeft(listView) + listView->getSize().x / 2 - select->getSize().x / 2,
-                tgui::bindBottom(listView) + getSize().y * 0.05 });
+                listView->setSize(getSize().x, getSize().y - label->getSize().y - select->getSize().y - 20);
+                listView->setColumnWidth(0, getSize().x * 0.08f);
+                listView->setColumnWidth(1, getSize().x * 0.5f);
+                listView->setColumnWidth(2, getSize().x * 0.12f);
+                listView->setColumnWidth(3, getSize().x * 0.3f);
+
+                select->setPosition({ tgui::bindLeft(listView) + listView->getSize().x / 2 - select->getSize().x / 2,
+                    tgui::bindBottom(listView) + 10 });
             });
     }
 
@@ -183,6 +191,7 @@ public:
     {
         auto t = std::make_shared<OpenFileDialog>(title, dir, tButtons);
         c.add(t);
+        //t->setSize(c.getSize()*0.9);
         return t;
     }
 

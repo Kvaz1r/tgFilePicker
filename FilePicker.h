@@ -16,7 +16,7 @@ public:
         m_Browse->setText("Browse");
         m_Browse->connect("pressed", [this]()
             {
-                auto ptr = OpenFileDialog::create(*this, L"File ", m_dir);
+                auto ptr = OpenFileDialog::create(*this, L"Open file dialog", m_dir);
                 ptr->connect("Closed", [this, ptr]()
                     {
                         if (ptr->getStatus() == OpenFileDialog::Status::OK)
