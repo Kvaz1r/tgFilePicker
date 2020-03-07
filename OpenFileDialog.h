@@ -10,6 +10,7 @@
 #include <iomanip>
 #include <sstream>
 #include <array>
+#include <iostream>
 
 #include <windows.h>
 
@@ -38,23 +39,31 @@ public:
 
         for (const auto& entry : std::filesystem::directory_iterator(val.asWideString()))
         {
-            if (std::filesystem::is_regular_file(entry))
+            try 
             {
-                auto ft = entry.last_write_time();
-                auto t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()
-                    + (ft - std::filesystem::file_time_type::clock::now()));
+                if (std::filesystem::is_regular_file(entry))
+                {
+                    auto ft = entry.last_write_time();
+                    auto t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()
+                        + (ft - std::filesystem::file_time_type::clock::now()));
 
-                std::stringstream sbuf;
-                sbuf << std::put_time(localtime(&t), "%F %H:%M:%S");
+                    std::stringstream sbuf;
+                    sbuf << std::put_time(localtime(&t), "%F %H:%M:%S");
 
-                addItem({ std::to_string(++i), entry.path().filename().c_str(),
-                    get_size(entry.file_size()), sbuf.str() });
+                    addItem({ std::to_string(++i), entry.path().filename().c_str(),
+                        get_size(entry.file_size()), sbuf.str() });
+                }
+                else
+                {
+                    addItem({ std::to_string(++i), entry.path().filename().c_str() });
+                }
             }
-            else
+            catch (const std::filesystem::filesystem_error & e)
             {
-                addItem({ std::to_string(++i), entry.path().filename().c_str() });
+                std::wcerr << e.what() << '\n';
             }
         }
+
     }
 
     void load()
