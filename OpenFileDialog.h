@@ -30,7 +30,7 @@ public:
         return std::make_shared<View>();
     }
 
-    void load(const tgui::String& val)
+    void load(const tgui::String& val, bool showHiddens)
     {
         removeAllItems();
         auto i = 0;
@@ -39,8 +39,11 @@ public:
 
         for (const auto& entry : std::filesystem::directory_iterator(val.asWideString()))
         {
-            try 
+            try
             {
+                if (!showHiddens && (::GetFileAttributes(entry.path().c_str()) & FILE_ATTRIBUTE_HIDDEN))
+                    continue;
+                
                 if (std::filesystem::is_regular_file(entry))
                 {
                     auto ft = entry.last_write_time();
@@ -122,10 +125,12 @@ public:
         label->setSize(getSize().x, 20);
         add(label);
 
+        auto showHidden = tgui::CheckBox::create("Show hidden files");
+
         auto listView = View::create();
         listView->setPosition({ tgui::bindLeft(label), tgui::bindBottom(label) + 10 });
 
-        listView->connect("DoubleClicked", [this, listView, label](int id)
+        listView->connect("DoubleClicked", [this, listView, label, showHidden](int id)
             {
                 auto fname = listView->getItemCell(id, 1).toWideString();
                 auto s = std::filesystem::path(m_curPath) / fname;
@@ -147,7 +152,7 @@ public:
                     }
                     m_curPath = s.wstring();
                     label->setText(s.c_str());
-                    listView->load(m_curPath);
+                    listView->load(m_curPath, showHidden->isChecked());
                 }
             });
 
@@ -160,9 +165,18 @@ public:
         listView->setColumnWidth(2, getSize().x * 0.12f);
         listView->setColumnWidth(3, getSize().x * 0.3f);
 
-        listView->load(m_dir);
-
         add(listView);
+
+        showHidden->setTextSize(20);
+        showHidden->setSize(40, 40);
+        showHidden->connect("Changed", [this, listView](bool state)
+            {
+                listView->load(m_curPath, state);
+            });
+        listView->load(m_dir, showHidden->isChecked());
+
+        add(showHidden);
+
 
         auto select = tgui::Button::create("Select");
         select->setSize(100, 40);
@@ -178,10 +192,10 @@ public:
         add(select);
 
         listView->setSize(getSize().x, getSize().y - label->getSize().y - select->getSize().y - 20);
-        select->setPosition({ tgui::bindLeft(listView) + listView->getSize().x / 2 - select->getSize().x / 2,
-            tgui::bindBottom(listView) + 10 });
+        showHidden->setPosition({ tgui::bindLeft(listView), tgui::bindBottom(listView) + 10 });
+        select->setPosition({ tgui::bindRight(listView) - select->getSize().x, tgui::bindBottom(listView) + 10 });
 
-        connect("SizeChanged", [this, listView, select, label]
+        connect("SizeChanged", [this, listView, select, label, showHidden]
             {
                 listView->setSize(getSize().x, getSize().y - label->getSize().y - select->getSize().y - 20);
                 listView->setColumnWidth(0, getSize().x * 0.08f);
@@ -189,8 +203,8 @@ public:
                 listView->setColumnWidth(2, getSize().x * 0.12f);
                 listView->setColumnWidth(3, getSize().x * 0.3f);
 
-                select->setPosition({ tgui::bindLeft(listView) + listView->getSize().x / 2 - select->getSize().x / 2,
-                    tgui::bindBottom(listView) + 10 });
+                showHidden->setPosition({ tgui::bindLeft(listView), tgui::bindBottom(listView) + 10 });
+                select->setPosition({ tgui::bindRight(listView) - select->getSize().x, tgui::bindBottom(listView) + 10 });
             });
     }
 
