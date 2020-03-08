@@ -43,7 +43,7 @@ public:
             {
                 if (!showHiddens && (::GetFileAttributes(entry.path().c_str()) & FILE_ATTRIBUTE_HIDDEN))
                     continue;
-                
+
                 if (std::filesystem::is_regular_file(entry))
                 {
                     auto ft = entry.last_write_time();
@@ -167,7 +167,7 @@ public:
 
         add(listView);
 
-        showHidden->setTextSize(20);
+        showHidden->setTextSize(16);
         showHidden->setSize(40, 40);
         showHidden->connect("Changed", [this, listView](bool state)
             {
@@ -197,11 +197,24 @@ public:
 
         add(select);
 
+        auto cancel = tgui::Button::create("Cancel");
+        cancel->setSize(100, 40);
+        cancel->setTextSize(20);
+        cancel->connect("pressed", [this]()
+            {
+                m_curPath = "";
+                m_status = Status::Cancel;
+                close();
+            });
+
+        add(cancel);
+
         listView->setSize(getSize().x, getSize().y - label->getSize().y - select->getSize().y - 20);
         showHidden->setPosition({ tgui::bindLeft(listView), tgui::bindBottom(listView) + 10 });
-        select->setPosition({ tgui::bindRight(listView) - select->getSize().x, tgui::bindBottom(listView) + 10 });
+        cancel->setPosition({ tgui::bindRight(listView) - cancel->getSize().x, tgui::bindBottom(listView) + 10 });
+        select->setPosition({ tgui::bindLeft(cancel) - select->getSize().x - 10, tgui::bindTop(cancel) });
 
-        connect("SizeChanged", [this, listView, select, label, showHidden]
+        connect("SizeChanged", [this, listView, select, cancel, label, showHidden]
             {
                 listView->setSize(getSize().x, getSize().y - label->getSize().y - select->getSize().y - 20);
                 listView->setColumnWidth(0, getSize().x * 0.08f);
@@ -210,7 +223,8 @@ public:
                 listView->setColumnWidth(3, getSize().x * 0.3f);
 
                 showHidden->setPosition({ tgui::bindLeft(listView), tgui::bindBottom(listView) + 10 });
-                select->setPosition({ tgui::bindRight(listView) - select->getSize().x, tgui::bindBottom(listView) + 10 });
+                cancel->setPosition({ tgui::bindRight(listView) - cancel->getSize().x, tgui::bindBottom(listView) + 10 });
+                select->setPosition({ tgui::bindLeft(cancel) - select->getSize().x - 10, tgui::bindTop(cancel) });
             });
     }
 
@@ -220,7 +234,6 @@ public:
     {
         auto t = std::make_shared<OpenFileDialog>(title, dir, tButtons);
         c.add(t);
-        //t->setSize(c.getSize()*0.9);
         return t;
     }
 
