@@ -183,7 +183,13 @@ public:
         select->setTextSize(20);
         select->connect("pressed", [this, listView]()
             {
-                auto fname = listView->getItemCell(listView->getSelectedItemIndex(), 1).toWideString();
+                auto idx = listView->getSelectedItemIndex();
+                if (idx == -1)
+                {
+                    return;
+                }
+
+                auto fname = listView->getItemCell(idx, 1).toWideString();
                 m_curPath = (std::filesystem::path(m_curPath) / fname).wstring();
                 m_status = Status::OK;
                 close();
