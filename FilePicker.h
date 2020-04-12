@@ -2,7 +2,9 @@
 // domain.  For more information, see <http://unlicense.org> or the
 // accompanying UNLICENSE file.
 
-#pragma once
+#ifndef _TG_FILEPICKER_H_
+#define _TG_FILEPICKER_H_
+
 #include "OpenFileDialog.h"
 
 class FilePicker : public tgui::Group
@@ -57,3 +59,5 @@ protected:
 private:
     tgui::String m_dir = std::filesystem::current_path();
 };
+
+#endif

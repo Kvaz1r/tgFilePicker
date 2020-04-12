@@ -2,7 +2,9 @@
 // domain.  For more information, see <http://unlicense.org> or the
 // accompanying UNLICENSE file.
 
-#pragma once
+#ifndef _TG_OPENFILEDIALOG_H_
+#define _TG_OPENFILEDIALOG_H_
+
 #include <TGUI/TGUI.hpp>
 
 #include <filesystem>
@@ -96,8 +98,8 @@ private:
     static std::string get_size(uintmax_t s)
     {
         std::array<std::string, 5> sizes = { "B", "KB", "MB", "GB", "TB" };
-        double len = s;
-        short order = 0;
+        uintmax_t len = s;
+        unsigned short order = 0;
         while (len >= 1024 && order < sizes.size() - 1)
         {
             order++;
@@ -252,3 +254,5 @@ private:
     tgui::String m_curPath;
     Status m_status = Status::Cancel;
 };
+
+#endif
