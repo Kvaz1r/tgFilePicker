@@ -2,18 +2,18 @@
 // domain.  For more information, see <http://unlicense.org> or the
 // accompanying UNLICENSE file.
 
-#ifndef _TG_OPENFILEDIALOG_H_
-#define _TG_OPENFILEDIALOG_H_
+#ifndef _TG_SAVEFILEDIALOG_H_
+#define _TG_SAVEFILEDIALOG_H_
 
 #include "FilesystemViewer.h"
 
-class OpenFileDialog : public tgui::ChildWindow
+class SaveFileDialog : public tgui::ChildWindow
 {
 public:
-    typedef std::shared_ptr<OpenFileDialog> Ptr;
+    typedef std::shared_ptr<SaveFileDialog> Ptr;
     enum class Status { OK, Cancel };
 
-    OpenFileDialog(const sf::String& title,
+    SaveFileDialog(const sf::String& title,
         tgui::String dir = std::filesystem::current_path().generic_wstring(),
         unsigned int tButtons = tgui::ChildWindow::TitleButton::Close) : ChildWindow(title, tButtons),
         m_dir(dir), m_curPath(dir)
@@ -70,8 +70,14 @@ public:
 
         add(listView);
 
-        showHidden->setTextSize(16);
-        showHidden->setSize(40, 40);
+        auto fileBox = tgui::EditBox::create();
+        fileBox->setDefaultText("Enter filename");
+        fileBox->setSize(getSize().x, 20);
+
+        add(fileBox);
+
+        showHidden->setTextSize(14);
+        showHidden->setSize(25, 25);
         showHidden->connect("Changed", [this, listView](bool state)
             {
                 listView->load(m_curPath, state);
@@ -80,20 +86,19 @@ public:
 
         add(showHidden);
 
-
-        auto select = tgui::Button::create("Select");
-        select->setSize(100, 40);
+        auto select = tgui::Button::create("Save");
+        select->setSize(100, 25);
         select->setTextSize(20);
-        select->connect("pressed", [this, listView]()
+        select->connect("pressed", [this, fileBox]()
             {
-                auto idx = listView->getSelectedItemIndex();
-                if (idx == -1)
+                auto fname = fileBox->getText().toWideString();
+                if (fname.empty())
                 {
                     return;
                 }
 
-                auto fname = listView->getItemCell(idx, 1).toWideString();
                 m_curPath = (std::filesystem::path(m_curPath) / fname).wstring();
+                std::replace(m_curPath.begin(), m_curPath.end(), '/', '\\');
                 m_status = Status::OK;
                 close();
             });
@@ -101,7 +106,7 @@ public:
         add(select);
 
         auto cancel = tgui::Button::create("Cancel");
-        cancel->setSize(100, 40);
+        cancel->setSize(100, 25);
         cancel->setTextSize(20);
         cancel->connect("pressed", [this]()
             {
@@ -112,30 +117,35 @@ public:
 
         add(cancel);
 
-        listView->setSize(getSize().x, getSize().y - label->getSize().y - select->getSize().y - 20);
-        showHidden->setPosition({ tgui::bindLeft(listView), tgui::bindBottom(listView) + 10 });
-        cancel->setPosition({ tgui::bindRight(listView) - cancel->getSize().x, tgui::bindBottom(listView) + 10 });
+        listView->setSize(getSize().x, getSize().y - label->getSize().y - select->getSize().y - fileBox->getSize().y - 35);
+        fileBox->setPosition({ tgui::bindLeft(listView), tgui::bindBottom(listView) + 10 });
+        showHidden->setPosition({ tgui::bindLeft(listView), tgui::bindBottom(fileBox) + 10 });
+        cancel->setPosition({ tgui::bindRight(listView) - cancel->getSize().x, tgui::bindBottom(fileBox) + 10 });
         select->setPosition({ tgui::bindLeft(cancel) - select->getSize().x - 10, tgui::bindTop(cancel) });
 
-        connect("SizeChanged", [this, listView, select, cancel, label, showHidden]
+        connect("SizeChanged", [this, listView, select, cancel, label, showHidden, fileBox]
             {
-                listView->setSize(getSize().x, getSize().y - label->getSize().y - select->getSize().y - 20);
-                listView->setColumnWidth(0, getSize().x * 0.08f);
-                listView->setColumnWidth(1, getSize().x * 0.5f);
-                listView->setColumnWidth(2, getSize().x * 0.12f);
-                listView->setColumnWidth(3, getSize().x * 0.3f);
+                auto width = getSize().x;
+                fileBox->setSize(width, 20);
+                listView->setSize(width, getSize().y - label->getSize().y - select->getSize().y - fileBox->getSize().y - 35);
 
-                showHidden->setPosition({ tgui::bindLeft(listView), tgui::bindBottom(listView) + 10 });
-                cancel->setPosition({ tgui::bindRight(listView) - cancel->getSize().x, tgui::bindBottom(listView) + 10 });
+                listView->setColumnWidth(0, width * 0.08f);
+                listView->setColumnWidth(1, width * 0.5f);
+                listView->setColumnWidth(2, width * 0.12f);
+                listView->setColumnWidth(3, width * 0.3f);
+
+                fileBox->setPosition({ tgui::bindLeft(listView), tgui::bindBottom(listView) + 10 });
+                showHidden->setPosition({ tgui::bindLeft(listView), tgui::bindBottom(fileBox) + 10 });
+                cancel->setPosition({ tgui::bindRight(listView) - cancel->getSize().x, tgui::bindBottom(fileBox) + 10 });
                 select->setPosition({ tgui::bindLeft(cancel) - select->getSize().x - 10, tgui::bindTop(cancel) });
             });
     }
 
-    static Ptr create(tgui::Container& c, const sf::String& title = "OpenFileDialog",
+    static Ptr create(tgui::Container& c, const sf::String& title = "SaveFileDialog",
         tgui::String dir = std::filesystem::current_path().generic_wstring(),
         unsigned int tButtons = tgui::ChildWindow::TitleButton::Close)
     {
-        auto t = std::make_shared<OpenFileDialog>(title, dir, tButtons);
+        auto t = std::make_shared<SaveFileDialog>(title, dir, tButtons);
         c.add(t);
         return t;
     }

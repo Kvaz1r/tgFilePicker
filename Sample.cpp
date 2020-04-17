@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "FilePicker.h"
+#include "SaveFileDialog.h"
 
 class MyFrame
 {
@@ -16,15 +17,39 @@ private:
 
 MyFrame::MyFrame()
 {
-    window.create(sf::VideoMode(800, 600), "FilePicker sample");
+    window.create(sf::VideoMode(800, 600), "FilePicker and SaveFileDialog sample");
     gui.setTarget(window);
     auto panel = tgui::Panel::create();
-    
+
     auto picker = FilePicker::create();
     picker->getButton()->setText(L"Browse");
-    picker->setDir("E:/");
+    picker->setDir("E:\\");
 
     panel->add(picker);
+
+    auto button = tgui::Button::create();
+    button->setText(L"SaveFileDialog");
+
+    button->setPosition({ tgui::bindLeft(picker->getEditBox()), tgui::bindBottom(picker->getEditBox()) });
+    button->connect("pressed", [this, panel]()
+        {
+            auto ptr = SaveFileDialog::create(*panel);
+            ptr->connect("Closed", [this, ptr]()
+                {
+                    if (ptr->getStatus() == SaveFileDialog::Status::OK)
+                    {
+                        std::wcout << "Path is " << ptr->getPath().asWideString() << '\n';
+                    }
+                    else if (ptr->getStatus() == SaveFileDialog::Status::Cancel)
+                    {
+                        std::wcout << "Cancelled\n";
+                    }
+                    ptr->destroy();
+                });
+            gui.add(ptr);
+        });
+    panel->add(button);
+
     gui.add(panel);
 }
 
