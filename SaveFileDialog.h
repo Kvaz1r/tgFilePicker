@@ -74,6 +74,16 @@ public:
         fileBox->setDefaultText("Enter filename");
         fileBox->setSize(getSize().x, 20);
 
+        listView->connect("ItemSelected", [this, listView, fileBox](int idx)
+            {
+                auto fname = listView->getItemCell(idx, 1).toWideString();
+                auto s = std::filesystem::path(m_curPath) / fname;
+                if (!std::filesystem::is_directory(s))
+                {
+                    fileBox->setText(listView->getItemCell(idx, 1));
+                }
+            });
+
         add(fileBox);
 
         showHidden->setTextSize(14);
