@@ -24,15 +24,70 @@ public:
         auto label = tgui::Label::create();
         label->setVerticalAlignment(tgui::Label::VerticalAlignment::Center);
         label->setText(dir.asWideString());
-        label->setTextSize(14);
-        label->setSize(getSize().x, 20);
+        label->setTextSize(12);
+        label->setSize(getSize().x - 110, 25);
         add(label);
 
         auto showHidden = tgui::CheckBox::create("Show hidden files");
-
         auto listView = FilesystemViewer::create();
-        listView->setPosition({ tgui::bindLeft(label), tgui::bindBottom(label) + 10 });
 
+        auto createFolder = tgui::Button::create("Create Folder");
+        createFolder->setTextSize(14);
+        createFolder->setSize(110, 25);
+        createFolder->setPosition({ tgui::bindRight(label), tgui::bindTop(label) + 5 });
+        createFolder->connect("pressed", [this, label, listView, showHidden]()
+            {
+                std::shared_ptr<sf::String> path = std::make_shared<sf::String>("");
+                auto ptr = tgui::ChildWindow::create("Folder creation");
+                ptr->setSize(300, 140);
+                ptr->setTitleAlignment(tgui::ChildWindow::TitleAlignment::Center);
+
+                auto dirName = tgui::EditBox::create();
+                dirName->setDefaultText("Folder name");
+                dirName->setMaximumCharacters(100);
+                dirName->setPosition(25, 30);
+                dirName->setSize(250, 30);
+                dirName->setTextSize(14);
+                ptr->add(dirName);
+
+                auto bOK = tgui::Button::create("OK");
+                bOK->setPosition(95, 80);
+                bOK->setSize(110, 30);
+                bOK->setTextSize(13);
+
+                ptr->add(bOK);
+
+                bOK->connect("pressed", [this, dirName, ptr, path]()
+                    {
+                        *path = dirName->getText();
+                        if (path->isEmpty())
+                        {
+                            dirName->getRenderer()->setBorderColor(sf::Color::Red);
+                            return;
+                        }
+                        ptr->close();
+                    });
+
+                ptr->connect("Closed", [this, ptr, path, label, listView, showHidden]()
+                    {
+                        if (!path->isEmpty())
+                        {
+                            auto fname = path->toWideString();
+                            auto s = std::filesystem::path(m_curPath) / fname;
+
+                            if (std::filesystem::create_directories(s))
+                            {
+                                listView->addItem({ std::to_string(listView->getItemCount()+1), fname });
+                            }
+                        }
+                        ptr->destroy();
+                    });
+                this->add(ptr);
+            });
+        add(createFolder);
+
+
+        listView->setPosition({ tgui::bindLeft(label), tgui::bindBottom(label) + 10 });
         listView->connect("DoubleClicked", [this, listView, label, showHidden](int id)
             {
                 auto fname = listView->getItemCell(id, 1).toWideString();
@@ -136,6 +191,7 @@ public:
         connect("SizeChanged", [this, listView, select, cancel, label, showHidden, fileBox]
             {
                 auto width = getSize().x;
+                label->setSize(getSize().x - 110, 25);
                 fileBox->setSize(width, 20);
                 listView->setSize(width, getSize().y - label->getSize().y - select->getSize().y - fileBox->getSize().y - 35);
 
