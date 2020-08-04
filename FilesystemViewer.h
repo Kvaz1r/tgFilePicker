@@ -41,7 +41,7 @@ public:
 
         try
         {
-            for (const auto& entry : std::filesystem::directory_iterator(val.asWideString()))
+            for (const auto& entry : std::filesystem::directory_iterator(val.toWideString()))
             {
                 try
                 {
@@ -65,13 +65,13 @@ public:
                         addItem({ std::to_string(++i), entry.path().filename().c_str() });
                     }
                 }
-                catch (const std::filesystem::filesystem_error & e)
+                catch (const std::filesystem::filesystem_error& e)
                 {
                     std::wcerr << e.what() << '\n';
                 }
             }
         }
-        catch (const std::filesystem::filesystem_error & e)
+        catch (const std::filesystem::filesystem_error& e)
         {
             std::wcerr << e.what() << '\n';
         }

@@ -16,15 +16,15 @@ public:
     {
         m_Browse = tgui::Button::create();
         m_Browse->setText("Browse");
-        m_Browse->connect("pressed", [this]()
+        m_Browse->onPress([this]()
             {
                 auto ptr = OpenFileDialog::create(*this, L"Open file dialog", m_dir);
-                ptr->connect("Closed", [this, ptr]()
+                ptr->onClose([this, ptr]()
                     {
                         if (ptr->getStatus() == OpenFileDialog::Status::OK)
                         {
-                            m_Path->setText(ptr->getPath().asWideString());
-                        }               
+                            m_Path->setText(ptr->getPath().toWideString());
+                        }
                         ptr->destroy();
                     });
             });

@@ -14,7 +14,7 @@ This project in early stage development i.e. in current status not intended for 
 Requirements
 ---------
 
-TGUI v0.8 or newer
+TGUI v0.9
 Windows-only (support for other OS will be added later, any PR would be welcome)
 
 Licence

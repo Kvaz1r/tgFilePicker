@@ -31,14 +31,14 @@ MyFrame::MyFrame()
     button->setText(L"SaveFileDialog");
 
     button->setPosition({ tgui::bindLeft(picker->getEditBox()), tgui::bindBottom(picker->getEditBox()) });
-    button->connect("pressed", [this, panel]()
+    button->onPress([this, panel]()
         {
             auto ptr = SaveFileDialog::create(*panel);
-            ptr->connect("Closed", [this, ptr]()
+            ptr->onClose([this, ptr]()
                 {
                     if (ptr->getStatus() == SaveFileDialog::Status::OK)
                     {
-                        std::wcout << "Path is " << ptr->getPath().asWideString() << '\n';
+                        std::wcout << "Path is " << ptr->getPath().toWideString() << '\n';
                     }
                     else if (ptr->getStatus() == SaveFileDialog::Status::Cancel)
                     {
@@ -60,15 +60,10 @@ void MyFrame::main()
         sf::Event event;
         while (window.pollEvent(event))
         {
+            gui.handleEvent(event);
+
             if (event.type == sf::Event::Closed)
                 window.close();
-
-            else if (event.type == sf::Event::Resized)
-            {
-                window.setView(sf::View(sf::FloatRect(0.f, 0.f, static_cast<float>(event.size.width), static_cast<float>(event.size.height))));
-                gui.setView(window.getView());
-            }
-            gui.handleEvent(event);
         }
 
         window.clear();

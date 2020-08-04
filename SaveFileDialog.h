@@ -13,9 +13,9 @@ public:
     typedef std::shared_ptr<SaveFileDialog> Ptr;
     enum class Status { OK, Cancel };
 
-    SaveFileDialog(const sf::String& title,
+    SaveFileDialog(const tgui::String& title,
         tgui::String dir = std::filesystem::current_path().generic_wstring(),
-        unsigned int tButtons = tgui::ChildWindow::TitleButton::Close) : ChildWindow(title, tButtons),
+        unsigned int tButtons = tgui::ChildWindow::TitleButton::Close) : tgui::ChildWindow(title, tButtons),
         m_dir(dir), m_curPath(dir)
     {
         setTitleAlignment(tgui::ChildWindow::TitleAlignment::Center);
@@ -23,7 +23,7 @@ public:
 
         auto label = tgui::Label::create();
         label->setVerticalAlignment(tgui::Label::VerticalAlignment::Center);
-        label->setText(dir.asWideString());
+        label->setText(dir.toWideString());
         label->setTextSize(12);
         label->setSize(getSize().x - 110, 25);
         add(label);
@@ -35,9 +35,9 @@ public:
         createFolder->setTextSize(14);
         createFolder->setSize(110, 25);
         createFolder->setPosition({ tgui::bindRight(label), tgui::bindTop(label) + 5 });
-        createFolder->connect("pressed", [this, label, listView, showHidden]()
+        createFolder->onPress([this, label, listView, showHidden]()
             {
-                std::shared_ptr<sf::String> path = std::make_shared<sf::String>("");
+                std::shared_ptr<tgui::String> path = std::make_shared<tgui::String>("");
                 auto ptr = tgui::ChildWindow::create("Folder creation");
                 ptr->setSize(300, 140);
                 ptr->setTitleAlignment(tgui::ChildWindow::TitleAlignment::Center);
@@ -57,10 +57,10 @@ public:
 
                 ptr->add(bOK);
 
-                bOK->connect("pressed", [this, dirName, ptr, path]()
+                bOK->onPress([this, dirName, ptr, path]()
                     {
                         *path = dirName->getText();
-                        if (path->isEmpty())
+                        if (path->empty())
                         {
                             dirName->getRenderer()->setBorderColor(sf::Color::Red);
                             return;
@@ -68,16 +68,16 @@ public:
                         ptr->close();
                     });
 
-                ptr->connect("Closed", [this, ptr, path, label, listView, showHidden]()
+                ptr->onClose([this, ptr, path, label, listView, showHidden]()
                     {
-                        if (!path->isEmpty())
+                        if (!path->empty())
                         {
                             auto fname = path->toWideString();
-                            auto s = std::filesystem::path(m_curPath) / fname;
+                            auto s = std::filesystem::path(m_curPath.toWideString()) / fname;
 
                             if (std::filesystem::create_directories(s))
                             {
-                                listView->addItem({ std::to_string(listView->getItemCount()+1), fname });
+                                listView->addItem({ std::to_string(listView->getItemCount() + 1), fname });
                             }
                         }
                         ptr->destroy();
@@ -88,15 +88,15 @@ public:
 
 
         listView->setPosition({ tgui::bindLeft(label), tgui::bindBottom(label) + 10 });
-        listView->connect("DoubleClicked", [this, listView, label, showHidden](int id)
+        listView->onDoubleClick([this, listView, label, showHidden](int id)
             {
                 auto fname = listView->getItemCell(id, 1).toWideString();
-                auto s = std::filesystem::path(m_curPath) / fname;
+                auto s = std::filesystem::path(m_curPath.toWideString()) / fname;
                 if (std::filesystem::is_directory(s))
                 {
                     if (fname == L"..")
                     {
-                        auto path = std::filesystem::path(m_curPath);
+                        auto path = std::filesystem::path(m_curPath.toWideString());
 
                         if (path == path.root_path())
                         {
@@ -127,12 +127,12 @@ public:
 
         auto fileBox = tgui::EditBox::create();
         fileBox->setDefaultText("Enter filename");
-        fileBox->setSize(getSize().x, 20);
+        fileBox->setSize(getSize().x, 25);
 
-        listView->connect("ItemSelected", [this, listView, fileBox](int idx)
+        listView->onItemSelect([this, listView, fileBox](int idx)
             {
                 auto fname = listView->getItemCell(idx, 1).toWideString();
-                auto s = std::filesystem::path(m_curPath) / fname;
+                auto s = std::filesystem::path(m_curPath.toWideString()) / fname;
                 if (!std::filesystem::is_directory(s))
                 {
                     fileBox->setText(listView->getItemCell(idx, 1));
@@ -143,7 +143,7 @@ public:
 
         showHidden->setTextSize(14);
         showHidden->setSize(25, 25);
-        showHidden->connect("Changed", [this, listView](bool state)
+        showHidden->onChange([this, listView](bool state)
             {
                 listView->load(m_curPath, state);
             });
@@ -154,7 +154,7 @@ public:
         auto select = tgui::Button::create("Save");
         select->setSize(100, 25);
         select->setTextSize(20);
-        select->connect("pressed", [this, fileBox]()
+        select->onPress([this, fileBox]()
             {
                 auto fname = fileBox->getText().toWideString();
                 if (fname.empty())
@@ -162,7 +162,7 @@ public:
                     return;
                 }
 
-                m_curPath = (std::filesystem::path(m_curPath) / fname).wstring();
+                m_curPath = (std::filesystem::path(m_curPath.toWideString()) / fname).wstring();
                 std::replace(m_curPath.begin(), m_curPath.end(), '/', '\\');
                 m_status = Status::OK;
                 close();
@@ -173,7 +173,7 @@ public:
         auto cancel = tgui::Button::create("Cancel");
         cancel->setSize(100, 25);
         cancel->setTextSize(20);
-        cancel->connect("pressed", [this]()
+        cancel->onPress([this]()
             {
                 m_curPath = "";
                 m_status = Status::Cancel;
@@ -182,18 +182,20 @@ public:
 
         add(cancel);
 
-        listView->setSize(getSize().x, getSize().y - label->getSize().y - select->getSize().y - fileBox->getSize().y - 35);
+        listView->setSize(getSize().x,
+            getSize().y - label->getSize().y - select->getSize().y - fileBox->getSize().y - 60);
         fileBox->setPosition({ tgui::bindLeft(listView), tgui::bindBottom(listView) + 10 });
         showHidden->setPosition({ tgui::bindLeft(listView), tgui::bindBottom(fileBox) + 10 });
         cancel->setPosition({ tgui::bindRight(listView) - cancel->getSize().x, tgui::bindBottom(fileBox) + 10 });
         select->setPosition({ tgui::bindLeft(cancel) - select->getSize().x - 10, tgui::bindTop(cancel) });
 
-        connect("SizeChanged", [this, listView, select, cancel, label, showHidden, fileBox]
+        onSizeChange([this, listView, select, cancel, label, showHidden, fileBox]
             {
                 auto width = getSize().x;
                 label->setSize(getSize().x - 110, 25);
-                fileBox->setSize(width, 20);
-                listView->setSize(width, getSize().y - label->getSize().y - select->getSize().y - fileBox->getSize().y - 35);
+                fileBox->setSize(width, 25);
+                listView->setSize(width,
+                    getSize().y - label->getSize().y - select->getSize().y - fileBox->getSize().y - 60);
 
                 listView->setColumnWidth(0, width * 0.08f);
                 listView->setColumnWidth(1, width * 0.5f);
@@ -207,7 +209,7 @@ public:
             });
     }
 
-    static Ptr create(tgui::Container& c, const sf::String& title = "SaveFileDialog",
+    static Ptr create(tgui::Container& c, const tgui::String& title = "SaveFileDialog",
         tgui::String dir = std::filesystem::current_path().generic_wstring(),
         unsigned int tButtons = tgui::ChildWindow::TitleButton::Close)
     {
